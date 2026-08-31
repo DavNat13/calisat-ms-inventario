@@ -11,7 +11,7 @@ services:
     volumes:
       - calisat_inventario_data:/var/lib/postgresql/data
     networks:
-      - calisat-inventario-net
+      - calisat-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile
     container_name: calisat-ms-inventario
     ports:
-      - "8082:8080"
+      - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
@@ -37,10 +37,10 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - calisat-inventario-net
+      - calisat-net
 
 networks:
-  calisat-inventario-net:
+  calisat-net:
     driver: bridge
 
 volumes:

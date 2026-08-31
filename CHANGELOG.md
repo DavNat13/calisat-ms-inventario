@@ -1,5 +1,10 @@
 # Changelog - calisat-ms-inventario
 
+## [1.0.2] - 2026-08-30
+
+### Changed
+- docker-compose alineado a la documentacion: red `calisat-net` y puerto `8080:8080`
+
 ## [1.0.1] - 2026-08-30
 
 ### Added
