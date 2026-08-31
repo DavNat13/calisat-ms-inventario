@@ -53,6 +53,12 @@ public class ProductoService {
     public Optional<Producto> actualizar(UUID id, String sku, String nombre, String categoria,
                                          String descripcion, BigDecimal precio, Integer stock,
                                          String unidadMedida) {
+        if (sku != null && productoRepository.existsBySku(sku)) {
+            Optional<Producto> mismo = productoRepository.findBySku(sku);
+            if (mismo.isEmpty() || !mismo.get().getId().equals(id)) {
+                throw new SkuDuplicadoException(sku);
+            }
+        }
         return productoRepository.findById(id)
                 .map(producto -> {
                     producto.setSku(sku);

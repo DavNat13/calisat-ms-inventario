@@ -75,17 +75,21 @@ public class ProductoController {
     public ResponseEntity<Map<String, Object>> actualizar(
             @PathVariable UUID id,
             @RequestBody Producto producto) {
-        return productoService.actualizar(
-                        id,
-                        producto.getSku(),
-                        producto.getNombre(),
-                        producto.getCategoria(),
-                        producto.getDescripcion(),
-                        producto.getPrecio(),
-                        producto.getStock(),
-                        producto.getUnidadMedida())
-                .map(p -> ResponseEntity.ok(aMapa(p)))
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return productoService.actualizar(
+                            id,
+                            producto.getSku(),
+                            producto.getNombre(),
+                            producto.getCategoria(),
+                            producto.getDescripcion(),
+                            producto.getPrecio(),
+                            producto.getStock(),
+                            producto.getUnidadMedida())
+                    .map(p -> ResponseEntity.ok(aMapa(p)))
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (SkuDuplicadoException ex) {
+            return ResponseEntity.badRequest().body(Map.of("mensaje", ex.getMessage()));
+        }
     }
 
     /**
