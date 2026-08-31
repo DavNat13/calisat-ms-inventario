@@ -13,7 +13,7 @@
 
     <groupId>com.califorge</groupId>
     <artifactId>calisat-ms-inventario</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.7</version>
     <name>calisat-ms-inventario</name>
     <description>Microservicio de inventario - Calisat</description>
 

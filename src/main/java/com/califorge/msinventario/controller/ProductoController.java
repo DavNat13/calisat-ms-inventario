@@ -1,6 +1,5 @@
 package com.califorge.msinventario.controller;
 
-import com.califorge.msinventario.exception.SkuDuplicadoException;
 import com.califorge.msinventario.model.Producto;
 import com.califorge.msinventario.service.ProductoService;
 import jakarta.validation.Valid;
@@ -59,12 +58,8 @@ public class ProductoController {
      */
     @PostMapping
     public ResponseEntity<Map<String, Object>> crear(@Valid @RequestBody Producto producto) {
-        try {
-            Producto guardado = productoService.crear(producto);
-            return ResponseEntity.ok(aMapa(guardado));
-        } catch (SkuDuplicadoException ex) {
-            return ResponseEntity.badRequest().body(Map.of("mensaje", ex.getMessage()));
-        }
+        Producto guardado = productoService.crear(producto);
+        return ResponseEntity.ok(aMapa(guardado));
     }
 
     /**
@@ -75,21 +70,17 @@ public class ProductoController {
     public ResponseEntity<Map<String, Object>> actualizar(
             @PathVariable UUID id,
             @RequestBody Producto producto) {
-        try {
-            return productoService.actualizar(
-                            id,
-                            producto.getSku(),
-                            producto.getNombre(),
-                            producto.getCategoria(),
-                            producto.getDescripcion(),
-                            producto.getPrecio(),
-                            producto.getStock(),
-                            producto.getUnidadMedida())
-                    .map(p -> ResponseEntity.ok(aMapa(p)))
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (SkuDuplicadoException ex) {
-            return ResponseEntity.badRequest().body(Map.of("mensaje", ex.getMessage()));
-        }
+        return productoService.actualizar(
+                        id,
+                        producto.getSku(),
+                        producto.getNombre(),
+                        producto.getCategoria(),
+                        producto.getDescripcion(),
+                        producto.getPrecio(),
+                        producto.getStock(),
+                        producto.getUnidadMedida())
+                .map(p -> ResponseEntity.ok(aMapa(p)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
