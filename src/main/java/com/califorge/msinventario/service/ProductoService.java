@@ -23,6 +23,12 @@ public class ProductoService {
 
     /**
      * Crea un producto validando que el SKU sea unico.
+     *
+     * Nota sobre concurrencia: el check {@code existsBySku} es una defensa temprana
+     * para responder 400 de forma rapida, NO es una garantia de unicidad. La garantia
+     * real la aporta la constraint UNIQUE del SKU en BD (que lanza
+     * DataIntegrityViolationException y es traducida a 400 por el
+     * GlobalExceptionHandler) en escenarios TOCTOU con requests simultaneos.
      */
     public Producto crear(Producto producto) {
         if (productoRepository.existsBySku(producto.getSku())) {
@@ -49,6 +55,9 @@ public class ProductoService {
 
     /**
      * Actualiza los campos editables de un producto existente.
+     *
+     * Nota sobre concurrencia: igual que en {@code crear}, el check de SKU es defensa
+     * temprana; la garantia de unicidad es la constraint UNIQUE en BD.
      */
     public Optional<Producto> actualizar(UUID id, String sku, String nombre, String categoria,
                                          String descripcion, BigDecimal precio, Integer stock,
