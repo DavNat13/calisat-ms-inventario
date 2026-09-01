@@ -13,7 +13,7 @@
 
     <groupId>com.califorge</groupId>
     <artifactId>calisat-ms-inventario</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
     <name>calisat-ms-inventario</name>
     <description>Microservicio de inventario - Calisat</description>
 
@@ -67,6 +67,17 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Flyway (migraciones de esquema; dueño único del schema) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
