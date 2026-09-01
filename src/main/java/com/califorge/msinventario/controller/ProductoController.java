@@ -69,7 +69,7 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> actualizar(
             @PathVariable UUID id,
-            @RequestBody Producto producto) {
+            @Valid @RequestBody Producto producto) {
         return productoService.actualizar(
                         id,
                         producto.getSku(),

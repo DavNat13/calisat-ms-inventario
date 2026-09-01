@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -37,9 +39,11 @@ public class Producto {
     @Column(length = 1000)
     private String descripcion;
 
+    @DecimalMin(value = "0", message = "precio no puede ser negativo")
     @Column(precision = 10, scale = 2)
     private BigDecimal precio;
 
+    @Min(value = 0, message = "stock no puede ser negativo")
     @Column(nullable = false)
     private Integer stock = 0;
 
