@@ -46,11 +46,11 @@ public class ProductoService {
     }
 
     /**
-     * Busca un producto por su id.
+     * Busca un producto por su id, solo si esta activo (coherente con listar).
      */
     @Transactional(readOnly = true)
     public Optional<Producto> buscarPorId(UUID id) {
-        return productoRepository.findById(id);
+        return productoRepository.findByIdAndActivoTrue(id);
     }
 
     /**
