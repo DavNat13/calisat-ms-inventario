@@ -1,5 +1,6 @@
 package com.califorge.msinventario.controller;
 
+import com.califorge.msinventario.dto.ProductoRequest;
 import com.califorge.msinventario.dto.ProductoResponse;
 import com.califorge.msinventario.model.Producto;
 import com.califorge.msinventario.service.ProductoService;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -54,12 +57,16 @@ public class ProductoController {
 
     /**
      * POST /api/v1/inventario/productos
-     * Crea un producto. Devuelve 400 si el SKU ya existe.
+     * Crea un producto. Devuelve 400 si el SKU ya existe, 201 en éxito con Location.
      */
     @PostMapping
-    public ResponseEntity<ProductoResponse> crear(@Valid @RequestBody Producto producto) {
-        Producto guardado = productoService.crear(producto);
-        return ResponseEntity.ok(ProductoResponse.desde(guardado));
+    public ResponseEntity<ProductoResponse> crear(@Valid @RequestBody ProductoRequest request) {
+        Producto guardado = productoService.crear(request);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(guardado.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(ProductoResponse.desde(guardado));
     }
 
     /**
@@ -69,16 +76,8 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductoResponse> actualizar(
             @PathVariable UUID id,
-            @Valid @RequestBody Producto producto) {
-        return productoService.actualizar(
-                        id,
-                        producto.getSku(),
-                        producto.getNombre(),
-                        producto.getCategoria(),
-                        producto.getDescripcion(),
-                        producto.getPrecio(),
-                        producto.getStock(),
-                        producto.getUnidadMedida())
+            @Valid @RequestBody ProductoRequest request) {
+        return productoService.actualizar(id, request)
                 .map(ProductoResponse::desde)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
