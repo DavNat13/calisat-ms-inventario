@@ -59,7 +59,7 @@ class ProductoControllerTest {
         p.setId(UUID.randomUUID());
         when(productoService.listar()).thenReturn(List.of(p));
 
-        mockMvc.perform(get("/api/v1/inventario/productos"))
+        mockMvc.perform(get("/inventario"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].sku", is("SKU-1")));
@@ -72,7 +72,7 @@ class ProductoControllerTest {
         p.setId(id);
         when(productoService.buscarPorId(id)).thenReturn(Optional.of(p));
 
-        mockMvc.perform(get("/api/v1/inventario/productos/{id}", id))
+        mockMvc.perform(get("/inventario/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(id.toString())));
     }
@@ -82,7 +82,7 @@ class ProductoControllerTest {
         UUID id = UUID.randomUUID();
         when(productoService.buscarPorId(id)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/v1/inventario/productos/{id}", id))
+        mockMvc.perform(get("/inventario/{id}", id))
                 .andExpect(status().isNotFound());
     }
 
@@ -97,13 +97,13 @@ class ProductoControllerTest {
                 {"sku":"SKU-1","nombre":"Barra","precio":10.00,"stock":5}
                 """;
 
-        mockMvc.perform(post("/api/v1/inventario/productos")
+        mockMvc.perform(post("/inventario")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(header().string("Location",
-                        org.hamcrest.Matchers.containsString("/api/v1/inventario/productos/" + id)))
+                        org.hamcrest.Matchers.containsString("/inventario/" + id)))
                 .andExpect(jsonPath("$.sku", is("SKU-1")));
     }
 }

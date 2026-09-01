@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/inventario/productos")
+@RequestMapping("/inventario")
 public class ProductoController {
 
     private final ProductoService productoService;
@@ -32,7 +32,7 @@ public class ProductoController {
     }
 
     /**
-     * GET /api/v1/inventario/productos
+     * GET /inventario
      * Lista los productos activos.
      */
     @GetMapping
@@ -44,7 +44,7 @@ public class ProductoController {
     }
 
     /**
-     * GET /api/v1/inventario/productos/{id}
+     * GET /inventario/{id}
      * Busca un producto por id. Devuelve 404 si no existe o esta inactivo.
      */
     @GetMapping("/{id}")
@@ -56,7 +56,7 @@ public class ProductoController {
     }
 
     /**
-     * POST /api/v1/inventario/productos
+     * POST /inventario
      * Crea un producto. Devuelve 400 si el SKU ya existe, 201 en éxito con Location.
      */
     @PostMapping
@@ -70,7 +70,7 @@ public class ProductoController {
     }
 
     /**
-     * PUT /api/v1/inventario/productos/{id}
+     * PUT /inventario/{id}
      * Actualiza un producto. Devuelve 404 si no existe.
      */
     @PutMapping("/{id}")
@@ -84,7 +84,7 @@ public class ProductoController {
     }
 
     /**
-     * DELETE /api/v1/inventario/productos/{id}
+     * DELETE /inventario/{id}
      * Desactiva un producto (baja logica). Devuelve 404 si no existe.
      */
     @DeleteMapping("/{id}")
