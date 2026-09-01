@@ -1,12 +1,12 @@
 package com.califorge.msinventario.service;
 
+import com.califorge.msinventario.dto.ProductoRequest;
 import com.califorge.msinventario.exception.SkuDuplicadoException;
 import com.califorge.msinventario.model.Producto;
 import com.califorge.msinventario.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,11 +30,11 @@ public class ProductoService {
      * DataIntegrityViolationException y es traducida a 400 por el
      * GlobalExceptionHandler) en escenarios TOCTOU con requests simultaneos.
      */
-    public Producto crear(Producto producto) {
-        if (productoRepository.existsBySku(producto.getSku())) {
-            throw new SkuDuplicadoException(producto.getSku());
+    public Producto crear(ProductoRequest request) {
+        if (productoRepository.existsBySku(request.sku())) {
+            throw new SkuDuplicadoException(request.sku());
         }
-        return productoRepository.save(producto);
+        return productoRepository.save(mapearParaGrabar(request));
     }
 
     /**
@@ -59,24 +59,22 @@ public class ProductoService {
      * Nota sobre concurrencia: igual que en {@code crear}, el check de SKU es defensa
      * temprana; la garantia de unicidad es la constraint UNIQUE en BD.
      */
-    public Optional<Producto> actualizar(UUID id, String sku, String nombre, String categoria,
-                                         String descripcion, BigDecimal precio, Integer stock,
-                                         String unidadMedida) {
-        if (sku != null && productoRepository.existsBySku(sku)) {
-            Optional<Producto> mismo = productoRepository.findBySku(sku);
+    public Optional<Producto> actualizar(UUID id, ProductoRequest request) {
+        if (request.sku() != null && productoRepository.existsBySku(request.sku())) {
+            Optional<Producto> mismo = productoRepository.findBySku(request.sku());
             if (mismo.isEmpty() || !mismo.get().getId().equals(id)) {
-                throw new SkuDuplicadoException(sku);
+                throw new SkuDuplicadoException(request.sku());
             }
         }
         return productoRepository.findById(id)
                 .map(producto -> {
-                    producto.setSku(sku);
-                    producto.setNombre(nombre);
-                    producto.setCategoria(categoria);
-                    producto.setDescripcion(descripcion);
-                    producto.setPrecio(precio);
-                    producto.setStock(stock);
-                    producto.setUnidadMedida(unidadMedida);
+                    producto.setSku(request.sku());
+                    producto.setNombre(request.nombre());
+                    producto.setCategoria(request.categoria());
+                    producto.setDescripcion(request.descripcion());
+                    producto.setPrecio(request.precio());
+                    producto.setStock(request.stock());
+                    producto.setUnidadMedida(request.unidadMedida());
                     return productoRepository.save(producto);
                 });
     }
@@ -90,5 +88,17 @@ public class ProductoService {
                     producto.setActivo(false);
                     return productoRepository.save(producto);
                 });
+    }
+
+    private Producto mapearParaGrabar(ProductoRequest request) {
+        Producto producto = new Producto();
+        producto.setSku(request.sku());
+        producto.setNombre(request.nombre());
+        producto.setCategoria(request.categoria());
+        producto.setDescripcion(request.descripcion());
+        producto.setPrecio(request.precio());
+        producto.setStock(request.stock());
+        producto.setUnidadMedida(request.unidadMedida());
+        return producto;
     }
 }

@@ -1,9 +1,12 @@
 package com.califorge.msinventario.service;
 
+import com.califorge.msinventario.dto.ProductoRequest;
+import com.califorge.msinventario.exception.SkuDuplicadoException;
 import com.califorge.msinventario.model.Producto;
 import com.califorge.msinventario.repository.ProductoRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,9 +18,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +32,41 @@ class ProductoServiceTest {
 
     @InjectMocks
     private ProductoService productoService;
+
+    @Test
+    void crear_mapeaTodosLosCamposEditablesDelRequest() {
+        when(productoRepository.existsBySku("SKU-1")).thenReturn(false);
+        Producto guardado = new Producto();
+        guardado.setId(UUID.randomUUID());
+        when(productoRepository.save(any(Producto.class))).thenReturn(guardado);
+
+        ProductoRequest request = new ProductoRequest(
+                "SKU-1", "Barra", "Barras", "Barra de dominadas",
+                new BigDecimal("10.00"), 5, "unidad");
+
+        productoService.crear(request);
+
+        ArgumentCaptor<Producto> captor = ArgumentCaptor.forClass(Producto.class);
+        verify(productoRepository).save(captor.capture());
+        Producto entidad = captor.getValue();
+        assertEquals("SKU-1", entidad.getSku());
+        assertEquals("Barra", entidad.getNombre());
+        assertEquals("Barras", entidad.getCategoria());
+        assertEquals("Barra de dominadas", entidad.getDescripcion());
+        assertEquals(new BigDecimal("10.00"), entidad.getPrecio());
+        assertEquals(5, entidad.getStock());
+        assertEquals("unidad", entidad.getUnidadMedida());
+    }
+
+    @Test
+    void crear_lanzaSkuDuplicado() {
+        when(productoRepository.existsBySku("SKU-1")).thenReturn(true);
+        ProductoRequest request = new ProductoRequest(
+                "SKU-1", "Barra", null, null, null, null, null);
+
+        assertThrows(SkuDuplicadoException.class, () -> productoService.crear(request));
+        verify(productoRepository).existsBySku("SKU-1");
+    }
 
     @Test
     void listar_devuelveSoloActivos() {
