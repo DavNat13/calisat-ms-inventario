@@ -64,7 +64,7 @@ class SecurityConfigTest {
 
     @Test
     void endpointDeNegocio_requiereAutenticacion() throws Exception {
-        mockMvc.perform(get("/inventario"))
+        mockMvc.perform(get("/api/v1/stock"))
                 .andExpect(status().isUnauthorized());
     }
 
