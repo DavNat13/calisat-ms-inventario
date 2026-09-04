@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 
 /**
  * DTO de entrada para crear/actualizar un registro de stock.
- * Solo expone los campos editables del dominio (punto 3 de INSTRUCCIONES.md),
  * excluyendo {@code id} y {@code fechaActualizacion} que no se inyectan desde el request.
  */
 public record StockRequest(

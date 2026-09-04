@@ -25,6 +25,10 @@ docker-compose.override.yml
 ### Documentos de trabajo (no versionar) ###
 CHANGELOG.md
 ARBOL-GENEALOGICO.md
+PAUTA.md
+PLAN.md
+AUDITORIA.md
+BUGS-ERRORES.md
 
 ### Variables de entorno sensibles (no versionar) ###
 .env

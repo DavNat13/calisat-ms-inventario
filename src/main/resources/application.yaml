@@ -12,9 +12,7 @@ spring:
 
   jpa:
     hibernate:
-      # Flyway es el unico dueno del schema: validamos que el esquema real
-      # coincida con las entidades, sin generar/alterar tablas automaticamente.
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
