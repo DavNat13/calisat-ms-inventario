@@ -5,6 +5,9 @@ import com.califorge.msinventario.dto.StockResponse;
 import com.califorge.msinventario.model.Stock;
 import com.califorge.msinventario.service.StockService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,13 +34,13 @@ public class StockController {
 
     /**
      * GET /api/v1/stock
-     * Lista todos los registros de stock.
+     * Lista registros de stock con paginacion.
      */
     @GetMapping
-    public ResponseEntity<List<StockResponse>> listar() {
-        List<StockResponse> stocks = stockService.listar().stream()
-                .map(StockResponse::desde)
-                .toList();
+    public ResponseEntity<Page<StockResponse>> listar(
+            @PageableDefault(size = 20, sort = "sku") Pageable pageable) {
+        Page<StockResponse> stocks = stockService.listar(pageable)
+                .map(StockResponse::desde);
         return ResponseEntity.ok(stocks);
     }
 
@@ -70,8 +72,7 @@ public class StockController {
 
     /**
      * PUT /api/v1/stock/{id}
-     * Actualiza sku y cantidades (mueve stock entre cantidadDisponible y cantidadReservada
-     * segun el saldo enviado). Devuelve 404 si no existe.
+     * Actualiza sku y cantidades. Devuelve 404 si no existe.
      */
     @PutMapping("/{id}")
     public ResponseEntity<StockResponse> actualizar(

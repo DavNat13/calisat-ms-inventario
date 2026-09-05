@@ -4,6 +4,8 @@ import com.califorge.msinventario.dto.StockRequest;
 import com.califorge.msinventario.exception.SkuDuplicadoException;
 import com.califorge.msinventario.model.Stock;
 import com.califorge.msinventario.repository.StockRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,11 @@ public class StockService {
     @Transactional(readOnly = true)
     public List<Stock> listar() {
         return stockRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Stock> listar(Pageable pageable) {
+        return stockRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)
