@@ -7,11 +7,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.AudienceValidator;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -35,12 +36,18 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        String jwkSetUri = issuerUri + tenantId + "/discovery/v2.0/keys";
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder
+                .withIssuerLocation(issuerUri)
+                .build();
 
-        OAuth2TokenValidator<Jwt> audienceValidator =
-                new AudienceValidator(List.of("api://" + jwtAudience));
-        jwtDecoder.setJwtValidator(audienceValidator);
+        OAuth2TokenValidator<Jwt> issuerValidator =
+                JwtValidators.createDefaultWithIssuer(issuerUri);
+
+        OAuth2TokenValidator<Jwt> delegatingValidator =
+                new DelegatingOAuth2TokenValidator<>(issuerValidator,
+                        new AudienceValidator(List.of(jwtAudience, "api://" + jwtAudience)));
+
+        jwtDecoder.setJwtValidator(delegatingValidator);
 
         return jwtDecoder;
     }

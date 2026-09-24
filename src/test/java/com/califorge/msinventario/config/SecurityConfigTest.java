@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,8 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Prueba de la Fase 8 (Endurecer seguridad) ejecutando la SecurityFilterChain real.
  * Carga solo la config de seguridad (sin JPA/BD). Las propiedades JWT son ficticias;
- * la red JWKS solo se consultaria al validar un token real, no en requests sin
- * header Authorization.
+ * el JwtDecoder real hace discovery OIDC (HTTP) al construirse, asi que se sustituye
+ * por un mock: aqui solo se ejercita la autorizacion de la filter chain, no la
+ * validacion de tokens.
  *
  * Se usa un controller de prueba que responde 200 en cualquier ruta, para
  * distinguir "rechazado por falta de autenticacion" (401) de "404".
@@ -40,6 +43,9 @@ class SecurityConfigTest {
 
     @Autowired
     private WebApplicationContext context;
+
+    @MockitoBean(name = "jwtDecoder")
+    private JwtDecoder jwtDecoder;
 
     private MockMvc mockMvc;
 

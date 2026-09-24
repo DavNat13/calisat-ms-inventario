@@ -46,20 +46,25 @@ class StockControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(stockController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(stockController)
+                .setCustomArgumentResolvers(
+                        new org.springframework.data.web.PageableHandlerMethodArgumentResolver())
+                .build();
     }
 
     @Test
     void listar_devuelveListaDeStocks() throws Exception {
         Stock stock = stock(1L, "SKU-1", 10, 0);
-        when(stockService.listar()).thenReturn(List.of(stock));
+        when(stockService.listar(any(org.springframework.data.domain.Pageable.class)))
+                .thenAnswer(invocation -> new org.springframework.data.domain.PageImpl<>(
+                        List.of(stock), invocation.getArgument(0), 1));
 
         mockMvc.perform(get("/api/v1/stock"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].sku", is("SKU-1")))
-                .andExpect(jsonPath("$[0].cantidadDisponible", is(10)))
-                .andExpect(jsonPath("$[0].cantidadReservada", is(0)));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].sku", is("SKU-1")))
+                .andExpect(jsonPath("$.content[0].cantidadDisponible", is(10)))
+                .andExpect(jsonPath("$.content[0].cantidadReservada", is(0)));
     }
 
     @Test
