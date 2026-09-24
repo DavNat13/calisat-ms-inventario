@@ -1,5 +1,13 @@
 # Changelog - calisat-ms-inventario
 
+## [1.3.0] - 2026-09-24
+
+### Added
+- RBAC con Azure Entra ID: bean `JwtAuthenticationConverter` que extrae el claim `roles` del JWT con prefijo `ROLE_` (normalizado a mayúsculas)
+- Escrituras de stock (`POST`, `PUT`, `DELETE` en `/api/v1/stock/**`) restringidas a `ADMINISTRADOR`
+- Lecturas de stock y `/actuator/health` siguen disponibles para cualquier usuario autenticado / público según el inventario de endpoints
+- Versión pom.xml actualizada a 1.3.0
+
 ## [1.2.0] - 2026-09-23
 
 ### Added
@@ -121,6 +129,7 @@
 
 > Nota: hasta la 1.0.24 el pom.xml permaneció fijado en 1.0.0 por convención (commit `fcd37a3`); la versión real se documentaba en los commits y en este CHANGELOG. Las versiones 1.0.1–1.0.24 se han incorporado aquí de forma condensada a partir de los asuntos de los commits (era pre-CHANGELOG).
 
+[1.3.0]: https://github.com/DavNat13/calisat-ms-inventario/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/DavNat13/calisat-ms-inventario/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/DavNat13/calisat-ms-inventario/compare/v1.0.24...v1.1.1
 [1.0.24]: https://github.com/DavNat13/calisat-ms-inventario/compare/v1.0.23...v1.0.24
