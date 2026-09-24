@@ -1,7 +1,10 @@
 package com.califorge.msinventario.service;
 
+import com.califorge.msinventario.dto.StockMovimientoRequest;
 import com.califorge.msinventario.dto.StockRequest;
 import com.califorge.msinventario.exception.SkuDuplicadoException;
+import com.califorge.msinventario.exception.StockConflictException;
+import com.califorge.msinventario.exception.StockInvalidoException;
 import com.califorge.msinventario.model.Stock;
 import com.califorge.msinventario.repository.StockRepository;
 import org.springframework.data.domain.Page;
@@ -52,6 +55,58 @@ public class StockService {
         return stockRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<Stock> buscarPorSku(String sku) {
+        return stockRepository.findBySku(sku);
+    }
+
+    /**
+     * Reserva stock: requiere que haya suficiente stock libre
+     * (disponible - reservada) para la cantidad pedida.
+     */
+    public Optional<Stock> reservar(String sku, StockMovimientoRequest request) {
+        return stockRepository.findBySku(sku).map(stock -> {
+            int libre = stock.getCantidadDisponible() - stock.getCantidadReservada();
+            if (libre < request.cantidad()) {
+                throw new StockConflictException("Stock insuficiente");
+            }
+            stock.setCantidadReservada(stock.getCantidadReservada() + request.cantidad());
+            return stockRepository.save(stock);
+        });
+    }
+
+    /**
+     * Libera stock reservado: requiere que la cantidad reservada actual
+     * sea mayor o igual que la cantidad a liberar.
+     */
+    public Optional<Stock> liberar(String sku, StockMovimientoRequest request) {
+        return stockRepository.findBySku(sku).map(stock -> {
+            if (stock.getCantidadReservada() < request.cantidad()) {
+                throw new StockConflictException("No hay suficiente stock reservado");
+            }
+            stock.setCantidadReservada(stock.getCantidadReservada() - request.cantidad());
+            return stockRepository.save(stock);
+        });
+    }
+
+    /**
+     * Confirma la salida de stock reservado: descuenta de disponible y de reservado.
+     * Exige que haya suficiente stock reservado y disponible.
+     */
+    public Optional<Stock> confirmar(String sku, StockMovimientoRequest request) {
+        return stockRepository.findBySku(sku).map(stock -> {
+            if (stock.getCantidadReservada() < request.cantidad()) {
+                throw new StockConflictException("No hay suficiente stock reservado");
+            }
+            if (stock.getCantidadDisponible() < request.cantidad()) {
+                throw new StockConflictException("Stock insuficiente");
+            }
+            stock.setCantidadDisponible(stock.getCantidadDisponible() - request.cantidad());
+            stock.setCantidadReservada(stock.getCantidadReservada() - request.cantidad());
+            return stockRepository.save(stock);
+        });
+    }
+
     /**
      * Actualiza sku y cantidades del stock. Semantica REPLACE: el cliente envia el
      * nuevo saldo de cantidadDisponible y cantidadReservada. Mover stock entre ambos
@@ -63,6 +118,11 @@ public class StockService {
             if (mismo.isEmpty() || !mismo.get().getId().equals(id)) {
                 throw new SkuDuplicadoException(request.sku());
             }
+        }
+        if (request.cantidadReservada() != null && request.cantidadDisponible() != null
+                && request.cantidadReservada() > request.cantidadDisponible()) {
+            throw new StockInvalidoException(
+                    "cantidadReservada no puede ser mayor que cantidadDisponible");
         }
         return stockRepository.findById(id)
                 .map(stock -> {

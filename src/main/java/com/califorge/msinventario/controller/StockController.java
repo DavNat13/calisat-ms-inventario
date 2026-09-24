@@ -1,5 +1,6 @@
 package com.califorge.msinventario.controller;
 
+import com.califorge.msinventario.dto.StockMovimientoRequest;
 import com.califorge.msinventario.dto.StockRequest;
 import com.califorge.msinventario.dto.StockResponse;
 import com.califorge.msinventario.model.Stock;
@@ -45,12 +46,66 @@ public class StockController {
     }
 
     /**
+     * GET /api/v1/stock/sku/{sku}
+     * Busca un registro de stock por SKU. Devuelve 404 si no existe.
+     */
+    @GetMapping("/sku/{sku}")
+    public ResponseEntity<StockResponse> buscarPorSku(@PathVariable String sku) {
+        return stockService.buscarPorSku(sku)
+                .map(StockResponse::desde)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
      * GET /api/v1/stock/{id}
      * Busca un registro de stock por id. Devuelve 404 si no existe.
      */
     @GetMapping("/{id}")
     public ResponseEntity<StockResponse> buscarPorId(@PathVariable Long id) {
         return stockService.buscarPorId(id)
+                .map(StockResponse::desde)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * POST /api/v1/stock/{sku}/reservar
+     * Reserva stock. Devuelve 404 si el SKU no existe, 409 si no hay stock libre.
+     */
+    @PostMapping("/{sku}/reservar")
+    public ResponseEntity<StockResponse> reservar(
+            @PathVariable String sku,
+            @Valid @RequestBody StockMovimientoRequest request) {
+        return stockService.reservar(sku, request)
+                .map(StockResponse::desde)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * POST /api/v1/stock/{sku}/liberar
+     * Libera stock reservado. Devuelve 404 si el SKU no existe, 409 si no hay reservado suficiente.
+     */
+    @PostMapping("/{sku}/liberar")
+    public ResponseEntity<StockResponse> liberar(
+            @PathVariable String sku,
+            @Valid @RequestBody StockMovimientoRequest request) {
+        return stockService.liberar(sku, request)
+                .map(StockResponse::desde)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * POST /api/v1/stock/{sku}/confirmar
+     * Confirma salida de stock reservado. Devuelve 404 si el SKU no existe, 409 si no hay stock.
+     */
+    @PostMapping("/{sku}/confirmar")
+    public ResponseEntity<StockResponse> confirmar(
+            @PathVariable String sku,
+            @Valid @RequestBody StockMovimientoRequest request) {
+        return stockService.confirmar(sku, request)
                 .map(StockResponse::desde)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

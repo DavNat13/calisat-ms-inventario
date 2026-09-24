@@ -34,6 +34,18 @@ public class GlobalExceptionHandler {
                 .body(Map.of("mensaje", "El registro viola una restriccion de datos (posible SKU duplicado)"));
     }
 
+    @ExceptionHandler(StockConflictException.class)
+    public ResponseEntity<Map<String, Object>> conflicto(StockConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("mensaje", ex.getMessage()));
+    }
+
+    @ExceptionHandler(StockInvalidoException.class)
+    public ResponseEntity<Map<String, Object>> stockInvalido(StockInvalidoException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("mensaje", ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> generico(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
