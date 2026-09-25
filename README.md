@@ -38,7 +38,7 @@
 - **Liberar** reservas al cancelar.
 - **Confirmar** la salida física de unidades al pagar/despachar.
 
-Se expone bajo `/api/v1/stock` con **PostgreSQL** como almacén y validación de **JWT (Microsoft Entra ID)** sin RBAC (*modo académico*). Las claves de integración (`ms-carrito`, `ms-orden`) lo consumen en el puerto **8083**.
+Se expone bajo `/api/v1/stock` con **PostgreSQL** como almacén, validación de **JWT (Microsoft Entra ID)** y RBAC (escrituras solo `ADMINISTRADOR`). Las claves de integración (`ms-carrito`, `ms-orden`) lo consumen en el puerto **8083**.
 
 ## ✨ Características principales
 
@@ -48,7 +48,7 @@ Se expone bajo `/api/v1/stock` con **PostgreSQL** como almacén y validación de
 - 🔎 **Consultas múltiples**: listado paginado, por `id` y por `sku` (búsqueda canónica).
 - 🧾 **Manejo global de errores**: `GlobalExceptionHandler` con `SkuDuplicadoException`, `StockConflictException` (409) y `StockInvalidoException` (400).
 - 🩺 **Actuator**: `health` e `info` con detalle cuando está autorizado.
-- ⚙️ **Configuración 100 % por variables de entorno** (datasource y JWT sin secretos en el YAML).
+- ⚙️ **Configuración 100 % expuesta en el repo**: datasource, JWT (Entra ID) y CORS en valores literales de `application.yaml` y `SecurityConfig`, sin variables de entorno.
 - 🧪 **Suite amplia**: 41 tests unitarios (servicio, controladores, seguridad y dominio).
 - 🐳 **Docker multi-stage** con usuario no root y health check.
 
@@ -82,7 +82,7 @@ com.califorge.msinventario
 | JDK | **21+** (enforcer) |
 | Maven | 3.6.3+ (o wrapper `./mvnw`) |
 | Docker + Docker Compose | 24+ |
-| Variables de entorno | Obligatorias (ver [Configuración](#-configuración)) |
+| Variables de entorno | **Ninguna** (configuración literal en el repo) |
 
 ## ⚙️ Configuración
 
@@ -90,62 +90,48 @@ com.califorge.msinventario
 
 | Parámetro | Valor |
 |-----------|-------|
-| **Puerto del servicio** | **`8083`** en el ecosistema Calisat (defecto de `CALISAT_INVENTARIO_URL` en ms-carrito/ms-orden); `application.yaml` declara `8080` → arranca con `SERVER_PORT=8083` fuera de Docker |
-| Base de datos | PostgreSQL · configurable vía `SPRING_DATASOURCE_URL` |
-| `ddl-auto` | `${JPA_DDL_AUTO:update}` (Compose usa `validate` por defecto) |
+| **Puerto del servicio** | **`8083`** en el ecosistema Calisat (defecto de `CALISAT_INVENTARIO_URL` en ms-carrito/ms-orden); `application.yaml` declara `8080` → fuera de Docker arranca con `--server.port=8083` (compose publica `8083:8080`) |
+| Base de datos | PostgreSQL · `jdbc:postgresql://postgres:5432/calisat_inventario` (literal en `application.yaml`; servicio `postgres` del compose) |
+| `ddl-auto` | `update` (literal) |
 | Actuator | `health`, `info` |
 | Rutas públicas | `/api/v1/public/**`, `/actuator/health` |
 
-### Variables de entorno requeridas
+### Configuración expuesta (sin variables de entorno)
 
-El `application.yaml` **no trae valores por defecto** para datasource ni JWT; son obligatorias (en local o en `docker-compose.yml`):
+Toda la configuración está **en el repositorio**, igual que el resto de microservicios Calisat:
 
-| Variable | Descripción | Ejemplo / uso en Compose |
-|----------|-------------|--------------------------|
-| `SPRING_DATASOURCE_URL` | JDBC de PostgreSQL | `jdbc:postgresql://postgres-db:5432/<db>` |
-| `SPRING_DATASOURCE_USERNAME` | Usuario BD | `postgres` |
-| `SPRING_DATASOURCE_PASSWORD` | Contraseña BD | `postgres` |
-| `SPRING_PROFILES_ACTIVE` | Perfil Spring | `default` |
-| `JPA_DDL_AUTO` | Estrategia de esquema | `update` (local) · `validate` (Compose) |
-| `JWT_ISSUER_URI` | *Issuer* Entra ID | `https://login.microsoftonline.com/<tenant>/v2.0` |
-| `JWT_TENANT_ID` | Tenant de Entra ID | id del tenant académico |
-| `JWT_AUDIENCE` | *Audience* esperada | client id de la API |
-| `CORS_ALLOWED_ORIGINS` | Orígenes CORS | origen del API Gateway |
-| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Credenciales del contenedor BD (Compose) | `postgres` / `postgres` |
-
-> ⚠️ **Modo académico**: en un entorno real estas variables deben provenir de un secret manager; los valores de ejemplo son solo para desarrollo.
+| Parámetro | Valor literal | Ubicación |
+|-----------|---------------|-----------|
+| Datasource | `jdbc:postgresql://postgres:5432/calisat_inventario` · `postgres` / `postgres` | `application.yaml` |
+| `ddl-auto` | `update` | `application.yaml` |
+| *Issuer* Entra ID | `https://login.microsoftonline.com/e5372bf0-c5e3-4286-887c-79069f209c1f/v2.0` | `application.yaml` + `SecurityConfig.ISSUER_URI` |
+| *Audience* esperada | `d221f0d2-1a7c-4872-ad6c-367a1f0717ec` | `application.yaml` + `SecurityConfig.EXPECTED_AUDIENCE` |
+| Origen CORS | `https://ezeh839whh.execute-api.us-east-1.amazonaws.com` | `SecurityConfig.ALLOWED_ORIGIN` |
+| Credenciales BD (contenedor) | `calisat_inventario` / `postgres` / `postgres` | `docker-compose.yml` |
 
 ## ▶️ Ejecución local
 
 ### 1. Base de datos
 
 ```bash
-docker compose up -d postgres-db
+docker compose up -d postgres
 ```
 
-### 2. Aplicación con variables de entorno
+### 2. Aplicación
 
 PowerShell (Windows):
 
 ```powershell
-$env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/calisat_inventario"
-$env:SPRING_DATASOURCE_USERNAME="postgres"
-$env:SPRING_DATASOURCE_PASSWORD="postgres"
-$env:JWT_ISSUER_URI="https://login.microsoftonline.com/<tenant>/v2.0"
-$env:JWT_TENANT_ID="<tenant-id>"
 mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--server.port=8083"
 ```
 
 Bash (Linux/macOS):
 
 ```bash
-export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/calisat_inventario"
-export SPRING_DATASOURCE_USERNAME="postgres"
-export SPRING_DATASOURCE_PASSWORD="postgres"
-export JWT_ISSUER_URI="https://login.microsoftonline.com/<tenant>/v2.0"
-export JWT_TENANT_ID="<tenant-id>"
 ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8083
 ```
+
+> 💡 Sin variables de entorno: la configuración (datasource, JWT y CORS) está literal en `application.yaml` y `SecurityConfig`.
 
 ### 3. Docker Compose
 
@@ -205,10 +191,10 @@ curl -X POST http://localhost:8083/api/v1/stock/BARRAS-001/reservar \
 ## 🔒 Seguridad
 
 - **JWT (OAuth2 Resource Server)** de **Microsoft Entra ID**: validación de *issuer* + *audience* con `DelegatingOAuth2TokenValidator` / `AudienceValidator`.
-- **Sin RBAC**: un único nivel autenticado; usuario genérico (*modo académico*).
+- **RBAC**: claim `roles` del JWT → `ROLE_*`; escrituras de stock (`POST`/`PUT`/`DELETE`) solo para `ADMINISTRADOR`.
 - **Rutas públicas**: `/api/v1/public/**` y `/actuator/health`; el resto requiere token.
-- **CORS** configurable por `CORS_ALLOWED_ORIGINS`; CSRF deshabilitado (API stateless).
-- **Sin secretos en el repositorio**: datasource y JWT 100 % por variables de entorno.
+- **CORS** con origen literal `https://ezeh839whh.execute-api.us-east-1.amazonaws.com` (`SecurityConfig.ALLOWED_ORIGIN`); CSRF deshabilitado (API stateless).
+- **Configuración expuesta en el repo**: datasource, JWT y CORS literales; sin variables de entorno.
 
 ## 🧪 Tests
 
@@ -218,22 +204,18 @@ curl -X POST http://localhost:8083/api/v1/stock/BARRAS-001/reservar \
 
 | Suite | Archivos | Tests |
 |-------|----------|-------|
-| Unitarios | `StockServiceTest` (18), `StockMovimientoControllerTest` (10), `StockControllerTest` (7), `SecurityConfigTest` (4), `StockResponseTest` (1), `DominioStockGuardTest` (1) | **41** |
+| Unitarios | `StockServiceTest` (18), `StockMovimientoControllerTest` (10), `StockControllerTest` (7), `SecurityConfigTest` (3), `StockResponseTest` (1), `DominioStockGuardTest` (1) | **40** |
 
 ## 📦 Despliegue
 
 ### Docker
 
 ```bash
-docker build -t calisat-ms-inventario:1.2.0 .
-docker run -p 8083:8080 \
-  -e SPRING_DATASOURCE_URL="jdbc:postgresql://<host-db>:5432/calisat_inventario" \
-  -e SPRING_DATASOURCE_USERNAME="postgres" \
-  -e SPRING_DATASOURCE_PASSWORD="postgres" \
-  -e JWT_ISSUER_URI="https://login.microsoftonline.com/<tenant>/v2.0" \
-  -e JWT_TENANT_ID="<tenant-id>" \
-  --name calisat-ms-inventario calisat-ms-inventario:1.2.0
+docker build -t calisat-ms-inventario:1.3.1 .
+docker run -p 8083:8080 --name calisat-ms-inventario calisat-ms-inventario:1.3.1
 ```
+
+> Sin `-e`: no se requiere ninguna variable de entorno (configuración literal en el JAR). Para otro host de BD basta editar el literal de `application.yaml` antes del build.
 
 **Dockerfile multi-stage:**
 
@@ -264,6 +246,6 @@ Incluye PostgreSQL 15 con health check y volumen `calisat_inventario_data` en la
 
 Proyecto desarrollado en **modo académico**; sin licencia open source formal. Credenciales de ejemplo y configuración JWT son solo para fines educativos.
 
-- **Versión actual**: `1.2.0`
+- **Versión actual**: `1.3.1`
 - **Historial de cambios**: [`CHANGELOG.md`](CHANGELOG.md)
 - **Plan de trabajo**: [`PLAN.md`](PLAN.md) (fases de dominio, compose y CHANGELOG)

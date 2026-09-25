@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -33,11 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringJUnitConfig
 @WebAppConfiguration
-@TestPropertySource(properties = {
-        "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.com/",
-        "spring.security.oauth2.resourceserver.jwt.tenant-id=fake-tenant",
-        "CORS_ALLOWED_ORIGINS=http://localhost:5173"
-})
 @Import({SecurityConfig.class, SecurityConfigTest.TestControllerConfig.class})
 class SecurityConfigTest {
 

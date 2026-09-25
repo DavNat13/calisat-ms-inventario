@@ -3,7 +3,6 @@ package com.califorge.msinventario.config;
 import java.util.List;
 import java.util.Locale;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,30 +26,27 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
+    private static final String ISSUER_URI =
+            "https://login.microsoftonline.com/e5372bf0-c5e3-4286-887c-79069f209c1f/v2.0";
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.tenant-id}")
-    private String tenantId;
+    private static final String EXPECTED_AUDIENCE =
+            "d221f0d2-1a7c-4872-ad6c-367a1f0717ec";
 
-    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:5173}")
-    private String allowedOrigins;
-
-    @Value("${JWT_AUDIENCE:}")
-    private String jwtAudience;
+    private static final String ALLOWED_ORIGIN =
+            "https://ezeh839whh.execute-api.us-east-1.amazonaws.com";
 
     @Bean
     public JwtDecoder jwtDecoder() {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder
-                .withIssuerLocation(issuerUri)
+                .withIssuerLocation(ISSUER_URI)
                 .build();
 
         OAuth2TokenValidator<Jwt> issuerValidator =
-                JwtValidators.createDefaultWithIssuer(issuerUri);
+                JwtValidators.createDefaultWithIssuer(ISSUER_URI);
 
         OAuth2TokenValidator<Jwt> delegatingValidator =
                 new DelegatingOAuth2TokenValidator<>(issuerValidator,
-                        new AudienceValidator(List.of(jwtAudience, "api://" + jwtAudience)));
+                        new AudienceValidator(List.of(EXPECTED_AUDIENCE, "api://" + EXPECTED_AUDIENCE)));
 
         jwtDecoder.setJwtValidator(delegatingValidator);
 
@@ -72,7 +68,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        config.setAllowedOrigins(List.of(ALLOWED_ORIGIN));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);

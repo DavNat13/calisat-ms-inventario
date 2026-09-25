@@ -1,5 +1,15 @@
 # Changelog - calisat-ms-inventario
 
+## [1.3.1] - 2026-09-25
+
+### Changed
+- **Configuración sin variables de entorno**: `application.yaml` pasa a valores literales expuestos (datasource `jdbc:postgresql://postgres:5432/calisat_inventario`, `ddl-auto: update`, issuer/audience de Azure Entra ID), replicando el patrón de ms-usuarios y el resto de microservicios
+- `SecurityConfig` reemplaza los 4 `@Value` por constantes `ISSUER_URI`, `EXPECTED_AUDIENCE` y `ALLOWED_ORIGIN` (mismo origen CORS que los demás servicios); se elimina el campo `tenant-id` sin uso. Validación Entra ID intacta: issuer + audience (`AudienceValidator`) + claim `roles` → `ROLE_*`
+- `docker-compose.yml` sin interpolación `${...}`: credenciales BD literales, servicio renombrado `postgres-db` → `postgres` (coincide con el host del YAML), sin bloque `environment:` en la app y puerto `8083:8080` expuesto (pendiente cerrado de `tarea-endpoints-aws.md`)
+- README: se documenta la configuración literal expuesta; se eliminan las tablas y ejemplos de variables de entorno; RBAC descripción corregida
+- `SecurityConfigTest`: se elimina `@TestPropertySource` con propiedades que ya no lee la configuración (suite: 40 tests)
+- Versión pom.xml actualizada a 1.3.1
+
 ## [1.3.0] - 2026-09-24
 
 ### Added
