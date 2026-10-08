@@ -35,3 +35,12 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+
+# ---------------------------------------------------------------------------
+# Integracion MS->MS (fase de conexion): credencial que los demas
+# microservicios envian en X-Service-Token. Ver ServiceTokenFilter.
+# ---------------------------------------------------------------------------
+calisat:
+  servicio:
+    token: calisat-svc-7f3a9c21

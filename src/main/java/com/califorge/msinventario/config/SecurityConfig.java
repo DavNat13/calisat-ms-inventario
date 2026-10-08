@@ -3,6 +3,7 @@ package com.califorge.msinventario.config;
 import java.util.List;
 import java.util.Locale;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +19,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,6 +36,10 @@ public class SecurityConfig {
 
     private static final String ALLOWED_ORIGIN =
             "https://ezeh839whh.execute-api.us-east-1.amazonaws.com";
+
+    /** Credencial MS->MS (misma clave que publican los demas microservicios). */
+    @Value("${calisat.servicio.token:}")
+    private String tokenDeServicio;
 
     @Bean
     public JwtDecoder jwtDecoder() {
@@ -85,16 +91,25 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/v1/public/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/stock", "/api/v1/stock/**").hasAnyRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/stock", "/api/v1/stock/**").hasAnyRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/stock", "/api/v1/stock/**").hasAnyRole("ADMINISTRADOR")
+                // Escrituras de stock: administrador desde el panel. Las
+                // reservas/confirmaciones/liberaciones que dispara una orden
+                // y las lecturas de stock de carrito llegan con
+                // X-Service-Token -> SERVICIO.
+                .requestMatchers(HttpMethod.POST, "/api/v1/stock", "/api/v1/stock/**")
+                        .hasAnyRole("ADMINISTRADOR", "SERVICIO")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/stock", "/api/v1/stock/**")
+                        .hasAnyRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/stock", "/api/v1/stock/**")
+                        .hasAnyRole("ADMINISTRADOR")
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
                     .decoder(jwtDecoder())
                     .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-            );
+            )
+            .addFilterBefore(new ServiceTokenFilter(tokenDeServicio),
+                    UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
