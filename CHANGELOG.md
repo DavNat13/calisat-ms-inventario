@@ -1,5 +1,11 @@
 # Changelog - calisat-ms-inventario
 
+## [1.3.2] - 2026-11-18
+
+### Fixed
+- CORS: `SecurityConfig` admite la cabecera `Idempotency-Key`, requerida por el frontend en las operaciones de escritura
+- Versión pom.xml actualizada a 1.3.2
+
 ## [1.3.1] - 2026-09-25
 
 ### Changed
